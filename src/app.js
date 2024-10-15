@@ -65,10 +65,13 @@ app.patch("/user", async (req, res) => {
   const userId = req.body.userId;
   const data = req.body;
   try {
-    await userModel.findByIdAndUpdate({ _id: userId }, data);
+    await userModel.findByIdAndUpdate({ _id: userId }, data, {
+      returnDocument: "after",
+      runValidators: true,
+    });
     res.send("User updated successfully");
   } catch (error) {
-    res.status(400).send("Something went wrong");
+    res.status(400).send("Update failed");
   }
 });
 
@@ -76,7 +79,7 @@ connectDB()
   .then(() => {
     console.log("database connected successfully");
     app.listen(port, () => {
-      console.log(`Server running successfully on Port ${port}`);
+      console.log(`Server running successfully on ${port}`);
     });
   })
   .catch((err) => {
