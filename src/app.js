@@ -1,6 +1,8 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const userModel = require("./models/user");
+const { validateSignUpData } = require("./utils/validation");
+const bcrypt = require("bcrypt");
 
 const port = process.env.PORT || 3000;
 
@@ -9,13 +11,47 @@ const app = express();
 // middlewares
 app.use(express.json());
 
+// Signup api
 app.post("/signup", async (req, res) => {
-  const user = new userModel(req.body);
   try {
+    // Validation of data
+    validateSignUpData(req);
+    const { firstName, lastName, emailId, password } = req.body;
+    // Encrypt the password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = new userModel({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
     await user.save();
     res.send("User added successfully in database");
   } catch (error) {
     res.status(400).send("Error saving the user:" + error.message);
+  }
+});
+
+// login api
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+
+    const user = await userModel.findOne({ emailId: emailId });
+    if (!user) {
+      throw new Error("Email is not registered");
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      res.send("Login successful");
+    } else {
+      throw new Error("Password is not correct");
+    }
+  } catch (error) {
+    res.status(400).send("ERROR:" + error.message);
   }
 });
 
