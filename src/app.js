@@ -1,8 +1,7 @@
 const express = require("express");
 const connectDB = require("./config/database");
-const userModel = require("./models/user");
-const { validateSignUpData } = require("./utils/validation");
-const bcrypt = require("bcrypt");
+const cookieParser = require("cookie-parser");
+require("dotenv").config();
 
 const port = process.env.PORT || 3000;
 
@@ -10,126 +9,19 @@ const app = express();
 
 // middlewares
 app.use(express.json());
+app.use(cookieParser());
 
-// Signup api
-app.post("/signup", async (req, res) => {
-  try {
-    // Validation of data
-    validateSignUpData(req);
-    const { firstName, lastName, emailId, password } = req.body;
-    // Encrypt the password
-    const passwordHash = await bcrypt.hash(password, 10);
+//Import routes
+const authRouter = require("./routes/auth");
+const profileRouter = require("./routes/profile");
+const requestRouter = require("./routes/request");
 
-    const user = new userModel({
-      firstName,
-      lastName,
-      emailId,
-      password: passwordHash,
-    });
-    await user.save();
-    res.send("User added successfully in database");
-  } catch (error) {
-    res.status(400).send("Error saving the user:" + error.message);
-  }
-});
+// Apply route handlers
+app.use("/", authRouter);
+app.use("/", profileRouter);
+app.use("/", requestRouter);
 
-// login api
-app.post("/login", async (req, res) => {
-  try {
-    const { emailId, password } = req.body;
-
-    const user = await userModel.findOne({ emailId: emailId });
-    if (!user) {
-      throw new Error("Email is not registered");
-    }
-
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-
-    if (isPasswordValid) {
-      res.send("Login successful");
-    } else {
-      throw new Error("Password is not correct");
-    }
-  } catch (error) {
-    res.status(400).send("ERROR:" + error.message);
-  }
-});
-
-// Get a user by email
-app.get("/user", async (req, res) => {
-  const userEmail = req.body.emailId;
-
-  try {
-    const user = await userModel.findOne({ emailId: userEmail });
-    if (user.length == 0) {
-      res.send("User not found");
-    } else {
-      res.send(user);
-    }
-  } catch (error) {
-    res.status(400).send("Something went wrong");
-  }
-});
-
-// Feed API // getting all users
-app.get("/feed", async (req, res) => {
-  try {
-    const users = await userModel.find({});
-    if (!users) {
-      res.send("User not found");
-    } else {
-      res.send(users);
-    }
-  } catch (error) {
-    res.status(400).send("Something went wrong");
-  }
-});
-
-// delete a user
-app.delete("/user", async (req, res) => {
-  const userId = req.body.userId;
-  try {
-    const user = await userModel.findByIdAndDelete({ _id: userId });
-    res.send("User deleted successfully");
-  } catch (error) {
-    res.status(400).send("Something went wrong");
-  }
-});
-
-// update data of the user
-app.patch("/user/:userId", async (req, res) => {
-  const userId = req.params?.userId;
-  const data = req.body;
-  try {
-    const ALLOWED_UPDATES = [
-      "photoUrl",
-      "about",
-      "gender",
-      "age",
-      "password",
-      "skills",
-    ];
-
-    const isUpdateAllowed = Object.keys(data).every((k) =>
-      ALLOWED_UPDATES.includes(k)
-    );
-    if (!isUpdateAllowed) {
-      res.status(400).send("Update not allowed");
-    }
-    if (data?.skills.length > 10) {
-      throw new Error("Skills can not be more than 10");
-    }
-
-    await userModel.findByIdAndUpdate({ _id: userId }, data, {
-      returnDocument: "after",
-      runValidators: true,
-    });
-    res.send("User updated successfully");
-  } catch (error) {
-    res.status(400).send(error.message);
-  }
-});
-
+// DB connection and server start
 connectDB()
   .then(() => {
     console.log("database connected successfully");
