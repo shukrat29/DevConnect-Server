@@ -12,14 +12,14 @@ app.use(express.json());
 app.use(cookieParser());
 
 //Import routes
-const authRouter = require("./routes/auth");
-const profileRouter = require("./routes/profile");
-const requestRouter = require("./routes/request");
+const authRouter = require("./routes/authRouter");
+const profileRouter = require("./routes/profileRouter");
+const requestRouter = require("./routes/requestRouter");
 
 // Apply route handlers
-app.use("/", authRouter);
-app.use("/", profileRouter);
-app.use("/", requestRouter);
+app.use("/api/v1", authRouter);
+app.use("/api/v1", profileRouter);
+app.use("/api/v1", requestRouter);
 
 // DB connection and server start
 connectDB()

@@ -24,5 +24,3 @@
 - GET /user/connections
 - GET /user/requests/received
 - GET /user/feed
-
-status: ignored, interested, accept, reject

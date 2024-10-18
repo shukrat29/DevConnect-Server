@@ -1,11 +1,8 @@
-const express = require("express");
-const { validateSignUpData } = require("../utils/validation");
 const bcrypt = require("bcrypt");
 const userModel = require("../models/user");
+const { validateSignUpData } = require("../utils/validation");
 
-const authRouter = express.Router();
-
-authRouter.post("/signup", async (req, res) => {
+const signup = async (req, res) => {
   try {
     validateSignUpData(req);
     const { firstName, lastName, emailId, password } = req.body;
@@ -21,15 +18,15 @@ authRouter.post("/signup", async (req, res) => {
     await user.save();
     res.send("User added successfully in database");
   } catch (error) {
-    res.status(400).send("Error saving the user:" + error.message);
+    res.status(400).send("Error saving the user: " + error.message);
   }
-});
+};
 
-authRouter.post("/login", async (req, res) => {
+const login = async (req, res) => {
   try {
     const { emailId, password } = req.body;
 
-    const user = await userModel.findOne({ emailId: emailId });
+    const user = await userModel.findOne({ emailId });
     if (!user) {
       throw new Error("Email is not registered");
     }
@@ -38,22 +35,26 @@ authRouter.post("/login", async (req, res) => {
       const token = await user.getJWT();
 
       res.cookie("token", token, {
-        expires: new Date(Date.now() + 8 * 3600000),
+        expires: new Date(Date.now() + 8 * 3600000), // 8 hours
       });
       res.send("Login successful");
     } else {
       throw new Error("Password is not correct");
     }
   } catch (error) {
-    res.status(400).send("ERROR:" + error.message);
+    res.status(400).send("ERROR: " + error.message);
   }
-});
+};
 
-authRouter.post("/logout", async (req, res) => {
+const logout = async (req, res) => {
   res.cookie("token", null, {
     expires: new Date(Date.now()),
   });
-  res.send("logout successful");
-});
+  res.send("Logout successful");
+};
 
-module.exports = authRouter;
+module.exports = {
+  signup,
+  login,
+  logout,
+};
