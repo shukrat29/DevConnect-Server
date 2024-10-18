@@ -1,6 +1,6 @@
 const express = require("express");
-const connectDB = require("./config/database");
 const cookieParser = require("cookie-parser");
+const connectDB = require("./config/database");
 require("dotenv").config();
 
 const port = process.env.PORT || 3000;
@@ -16,7 +16,7 @@ const authRouter = require("./routes/authRouter");
 const profileRouter = require("./routes/profileRouter");
 const requestRouter = require("./routes/requestRouter");
 
-// Apply route handlers
+// Routes
 app.use("/api/v1", authRouter);
 app.use("/api/v1", profileRouter);
 app.use("/api/v1", requestRouter);
@@ -30,5 +30,5 @@ connectDB()
     });
   })
   .catch((err) => {
-    console.error("database can not connect");
+    console.error("database can not connect" + err.message);
   });
