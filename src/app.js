@@ -11,15 +11,17 @@ const app = express();
 app.use(express.json());
 app.use(cookieParser());
 
-//Import routes
+//Require routes
 const authRouter = require("./routes/authRouter");
 const profileRouter = require("./routes/profileRouter");
 const requestRouter = require("./routes/requestRouter");
+const userRouter = require("./routes/userRouter");
 
 // Routes
 app.use("/api/v1", authRouter);
 app.use("/api/v1", profileRouter);
 app.use("/api/v1", requestRouter);
+app.use("/api/v1", userRouter);
 
 // DB connection and server start
 connectDB()
