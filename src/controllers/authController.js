@@ -15,8 +15,16 @@ const signup = async (req, res) => {
       emailId,
       password: passwordHash,
     });
-    await user.save();
-    res.send("User added successfully in database");
+
+    const savedUser = await user.save();
+    const token = await savedUser.getJWT();
+
+    res.cookie("token", token, { expires: new Date(Date.now() + 8 * 3600000) });
+
+    res.json({
+      message: "User added successfully in database",
+      data: savedUser,
+    });
   } catch (error) {
     res.status(400).send("Error saving the user: " + error.message);
   }
@@ -37,7 +45,7 @@ const login = async (req, res) => {
       res.cookie("token", token, {
         expires: new Date(Date.now() + 8 * 3600000), // 8 hours
       });
-      res.send("Login successful");
+      res.send(user);
     } else {
       throw new Error("Password is not correct");
     }
